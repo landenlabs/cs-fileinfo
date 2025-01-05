@@ -1,0 +1,164 @@
+
+<html>
+<title> FileInfo Statisic Help </title>
+<head>
+</head>
+
+<body>
+
+<a href="http://msdn.microsoft.com/en-us/library/ms809016.aspx"> 
+http://msdn.microsoft.com/en-us/library/ms809016.aspx
+</a>
+
+<h2>DISK_PERFORMANCE</h2>
+
+
+
+<b>BytesRead</b>
+<br>Contains a cumulative count of bytes read from the disk since the performance counters were enabled.
+<p>
+
+<b>BytesWritten</b>
+<br>Contains a cumulative count of bytes written to the disk since the performance counters were enabled.
+<p>
+
+<b>ReadTime</b>
+<br>Contains a cumulative time, expressed in increments of 100 nanoseconds, spent on disk reads since the performance counters were enabled.
+<p>
+
+<b>WriteTime</b>
+<br>Contains a cumulative time, expressed in increments of 100 nanoseconds, spent on disk reads since the performance counters were enabled.
+<p>
+
+<b>IdleTime</b>
+<br>Contains a cumulative time, expressed in increments of 100 nanoseconds, since the performance counters were enabled in which there was no disk activity.
+<p>
+
+<b>ReadCount</b>
+<br>Contains the number of disk accesses for reads since the performance counters were enabled.
+<p>
+
+<b>WriteCount</b>
+<br>Contains the number of disk accesses for writes since the performance counters were enabled.
+<p>
+
+<b>QueueDepth</b>
+<br>Contains a snapshot of the number of queued disk I/O requests at the time that the query for performance statistics was performed.
+<p>
+
+<b>SplitCount</b>
+<br>Contains the number of disk accesses by means of an associated IRP since the performance counters were enabled.
+<p>
+
+<b>QueryTime</b>
+<br>Contains a timestamp indicating the system time at the moment that the query took place. System time is a count of 100-nanosecond 
+intervals since January 1, 1601. System time is typically updated approximately every ten milliseconds. For more information about system time, see KeQuerySystemTime.
+<p>
+
+<b>StorageDeviceNumber</b>
+<br>Contains a unique number assigned to every disk or volume across a particular storage type. The storage types are disk.sys, ftdisk.sys, and dmio.sys.
+<p>
+
+<b>StorageManagerName</b>
+<br>Contains an 8-character string that indicates which device driver provided the performance statistics. In Windows 2000, 
+this can be either "LogiDisk" for the driver logidisk.sys or "PhysDisk" for the driver physdisk.sys. These drivers collect 
+performance statistics for devices and physical disks respectively. In Windows XP and later operating systems, this can be
+any of the following three strings: "FTDISK" for the driver ftdisk.sys, "DMIO" for the driver dmio.sys, or "PARTMGR" for 
+the driver partmgr.sys. These three drivers collect performance statistics for basic disk volumes, dynamic disk volumes,
+and physical disks respectively. Note that these strings are 8-character case-sensitive strings with blank fill. For
+example, in the case of the string "FTDISK", the StorageManagerName character array should contain two 
+trailing blanks ("FTDISK"), and in the case of the string "DMIO", the array should contain four trailing blanks ("DMIO"). 
+<p>
+
+<b>Comments</b>
+<br>Counting halts whenever the performance counters are disabled, but the counters are not reset, so the cumulative values 
+assigned to the structure members might potentially reflect disk activity across several enablings and disablings of the counters.
+
+<hr>
+
+<a href="http://msdn.microsoft.com/en-us/library/ms809031.aspx">
+http://msdn.microsoft.com/en-us/library/ms809031.aspx
+</a>
+
+
+<h2>DISK_CACHE_INFORMATION</h2>
+
+The DISK_CACHE_INFORMATION structure is used with the IOCTL_DISK_GET_CACHE_INFORMATION request to retrieve cache information.
+<p>
+<pre><code>
+typedef struct _DISK_CACHE_INFORMATION {
+    BOOLEAN  ParametersSavable;
+    BOOLEAN  ReadCacheEnabled;
+    BOOLEAN  WriteCacheEnabled;
+    DISK_CACHE_RETENTION_PRIORITY  ReadRetentionPriority;
+    DISK_CACHE_RETENTION_PRIORITY  WriteRetentionPriority;
+    USHORT  DisablePrefetchTransferLength;
+    BOOLEAN  PrefetchScalar;
+    union {
+        struct {
+            USHORT  Minimum;
+            USHORT  Maximum;
+            USHORT  MaximumBlocks;
+        } ScalarPrefetch;
+        struct {
+            USHORT  Minimum;
+            USHORT  Maximum;
+        } BlockPrefetch;
+    };
+} DISK_CACHE_INFORMATION, *PDISK_CACHE_INFORMATION;
+</pre></code>
+
+
+<b>ParametersSavable</b>
+<br>Indicates, when set to 1, that the device is capable of saving any parameters in nonvolatile storage.
+<p>
+
+<b>ReadCacheEnabled</b>
+<br>Indicates, when set to 1, that the read cache is enabled.
+<p>
+
+<b>WriteCacheEnabled</b>
+<br>Indicates, when set to 1, that the write cache is enabled.
+<p>
+
+<b>ReadRetentionPriority</b>
+<br>
+Determines the likelihood of various types of data remaining in the cache. By means of this value, for instance, data cached from a READ or WRITE operation might be given a different priority than data cached under other circumstances, such as prefetch operations. Thus a value of EqualPriority indicates that no data is held in the cache on a preferential basis. When ReadRetentionPriority is set to EqualPriority, all types of data have equal access to cache memory. On the other hand, a value of KeepPrefetchedData indicates that a preference is to be given to prefetched data while a value of KeepReadData indicates that a preference is to be given to data cached from a READ operation. For more information about the values that can be assigned to this member see the DISK_CACHE_RETENTION_PRIORITY enumeration.
+<p>
+
+<b>WriteRetentionPriority</b>
+<br>See discussion under ReadRetentionPriority.
+<p>
+
+<b>DisablePrefetchTransferLength</b>
+<br>Disables prefetching. Prefetching might be disabled whenever the number of blocks requested exceeds the value in DisablePrefetchTransferLength. When zero, prefetching is disabled no matter what the size of the block request.
+<p>
+
+<b>PrefetchScalar</b>
+When TRUE, Indicates that ScalarPrefetch.Maximum should be used together with the transfer length to calculate the amount of data that can be prefetched. When FALSE, BlockPrefetch.Maximum will be the maximum number of disk blocks that can be prefetched.
+<p>
+
+<b>ScalarPrefetch.Minimum</b>
+Contains the scalar multiplier of the transfer length of the request when PrefetchScalar is TRUE. If PrefetchScalar is TRUE, the value in ScalarPrefetch.Minimum is multiplied by the transfer length to obtain the minimum amount of data that can be prefetched into the cache on a disk operation.
+<p>
+
+<b>ScalarPrefetch.Maximum</b>
+Contains the scalar multiplier of the transfer length of the request when PrefetchScalar is TRUE. If PrefetchScalar is TRUE, the value in ScalarPrefetch.Maximum is multiplied by the transfer length to obtain the maximum amount of data that can be prefetched into the cache on a disk operation.
+<p>
+
+<b>ScalarPrefetch.MaximumBlocks</b>
+Contains the maximum size, in blocks, of the transfer length.
+<p>
+
+<b>BlockPrefetch.Minimum</b>
+Indicates the minimum amount of data, as an absolute number of disk blocks, that can be prefetched into the cache on a disk operation, when PrefetchScalar is FALSE.
+<p>
+
+<b>BlockPrefetch.Maximum</b>
+Indicates the maximum amount of data, as an absolute number of disk blocks, that can be prefetched into the cache on a disk operation, when PrefetchScalar is FALSE.
+
+
+
+
+</body>
+</html>

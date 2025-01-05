@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Resources;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -10,7 +11,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("LanDen Labs")]
 [assembly: AssemblyProduct("FileInfo")]
-[assembly: AssemblyCopyright("Copyright (c) LanDen Labs - 2025")]
+[assembly: AssemblyCopyright("Copyright © LanDen Labs - 2025")]
 [assembly: AssemblyTrademark("Dennis Lang")]
 [assembly: AssemblyCulture("")]
 
@@ -34,3 +35,4 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("2.6.0.0")]
 [assembly: AssemblyFileVersion("2.6")]
+[assembly: NeutralResourcesLanguage("en")]

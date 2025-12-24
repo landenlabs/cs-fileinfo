@@ -1,4 +1,4 @@
-﻿using System.Resources;
+using System.Resources;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -9,10 +9,10 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("FileInfo")]
 [assembly: AssemblyDescription("Display open file handles per process.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("LanDen Labs")]
+[assembly: AssemblyCompany("LanDen Labs - Dennis Lang")]
 [assembly: AssemblyProduct("FileInfo")]
 [assembly: AssemblyCopyright("Copyright © LanDen Labs - 2025")]
-[assembly: AssemblyTrademark("Dennis Lang")]
+[assembly: AssemblyTrademark("free to use, can't sell")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 

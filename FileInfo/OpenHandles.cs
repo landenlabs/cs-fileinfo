@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-using System.Runtime.InteropServices;
 using System.Diagnostics;
-
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using static FileInfo.OpenHandles;
+using System;
+using System.Runtime.InteropServices;
 
 
 namespace FileInfo
@@ -62,38 +63,63 @@ namespace FileInfo
 
         public const uint STATUS_INFO_LENGTH_MISMATCH = 0xc0000004;
 
-        public static SYSTEM_HANDLE_INFORMATION[] EnumHandles()
-        {
-            int retLength = 0;
-            int allocLength = 0x1000;
-            IntPtr data = Marshal.AllocHGlobal(allocLength);
-            
-            // This is needed because ZwQuerySystemInformation with SystemHandleInformation doesn't
-            // actually give a real return length when called with an insufficient buffer. This code
-            // tries repeatedly to call the function, doubling the buffer size each time it fails.
-            while (ZwQuerySystemInformation(SYSTEM_INFORMATION_CLASS.SystemHandleInformation, data,
-                allocLength, out retLength) == STATUS_INFO_LENGTH_MISMATCH)
-                data = Marshal.ReAllocHGlobal(data, new IntPtr(allocLength *= 2));
-            
-            // The structure of the buffer is the handle count plus an array of SYSTEM_HANDLE_INFORMATION
-            // structures.
-            // int handleCount = Marshal.ReadInt32(data);
-            int handleCount = Marshal.ReadInt32(data);
-            SYSTEM_HANDLE_INFORMATION[] returnHandles = new SYSTEM_HANDLE_INFORMATION[handleCount];
-            
-            for (int i = 0; i < handleCount; i++)
-            {
-                returnHandles[i] = (SYSTEM_HANDLE_INFORMATION)Marshal.PtrToStructure(
-                    new IntPtr(data.ToInt32() + hndSize + i * Marshal.SizeOf(typeof(SYSTEM_HANDLE_INFORMATION))),
-                    typeof(SYSTEM_HANDLE_INFORMATION));
-            }
-            
-            Marshal.FreeHGlobal(data);
-            
-            return returnHandles;
-        }
 
-        [DllImport("kernel32.dll", SetLastError = true)]
+		public static SYSTEM_HANDLE_INFORMATION[] EnumHandles() {
+			int retLength = 0;
+			int allocLength = 0x10000; // Start with a larger buffer (64KB)
+			IntPtr data = Marshal.AllocHGlobal(allocLength);
+
+			try {
+				// 1. Loop until buffer is large enough
+				uint status;
+				while ((status = ZwQuerySystemInformation(SYSTEM_INFORMATION_CLASS.SystemHandleInformation, data, allocLength, out retLength)) == STATUS_INFO_LENGTH_MISMATCH) {
+					allocLength = retLength > allocLength ? retLength : allocLength * 2;
+					// Reallocate to the new size. Free and reallocate to avoid leaking if ReAllocHGlobal fails
+					Marshal.FreeHGlobal(data);
+					data = Marshal.AllocHGlobal(allocLength);
+				}
+
+				if (status != 0) // STATUS_SUCCESS
+					return Array.Empty<SYSTEM_HANDLE_INFORMATION>();
+
+				// Use the returned length when available to bound parsing
+				int bytesAvailable = retLength > 0 ? retLength : allocLength;
+
+				// 2. Read the count (Use 32-bit read to avoid a malformed huge value)
+				int reportedCount = 0;
+				try { reportedCount = Marshal.ReadInt32(data); } catch { reportedCount = 0; }
+
+				if (reportedCount < 0) reportedCount = 0;
+
+				int structSize = Marshal.SizeOf(typeof(SYSTEM_HANDLE_INFORMATION));
+				int maxPossible = (bytesAvailable - IntPtr.Size) / structSize;
+				if (maxPossible < 0) maxPossible = 0;
+				int count = Math.Min(reportedCount, maxPossible);
+
+				var handles = new List<SYSTEM_HANDLE_INFORMATION>(count > 0 ? count : Math.Max(16, maxPossible));
+
+				long baseAddr = data.ToInt64();
+				long offset = IntPtr.Size; // Skip the handle count header
+
+				for (int i = 0; i < count; i++) {
+					if (offset + structSize > bytesAvailable)
+						break; // avoid reading past buffer
+
+					IntPtr entryPtr = new IntPtr(baseAddr + offset);
+					var entry = (SYSTEM_HANDLE_INFORMATION)Marshal.PtrToStructure(entryPtr, typeof(SYSTEM_HANDLE_INFORMATION));
+					handles.Add(entry);
+					offset += structSize;
+				}
+
+				return handles.ToArray();
+			}
+			finally {
+				// Use finally to ensure memory is freed even if an exception occurs
+				Marshal.FreeHGlobal(data);
+			}
+		}
+
+		[DllImport("kernel32.dll", SetLastError = true)]
         static extern int DuplicateHandle(int hSourceProcessHandle, int hSourceHandle,
                 int hTargetProcessHandle, ref int lpTargetHandle,
                 int dwDesiredAccess, int bInheritHandle, int dwOptions);
@@ -319,7 +345,7 @@ namespace FileInfo
 
 			// https://github.com/FuzzySecurity/PSKernel-Primitives/blob/master/Get-Handles.ps1
 			// 	$OSVersion = [Version](Get-WmiObject Win32_OperatingSystem).Version
-			//  $OSMajorMinor = "$($OSVersion.Major).$($OSVersion.Minor)"
+			// 	$OSMajorMinor = "$($OSVersion.Major).$($OSVersion.Minor)"
 
 			// Windows 10.0
 			switch (objTypeNumber)
@@ -354,7 +380,7 @@ namespace FileInfo
 				case 28: return "CoreMessaging";
 				case 29: return "TpWorkerFactory";
 				case 30: return "Adapter";
-				case 31: return "Controller";
+			 case 31: return "Controller";
 				case 32: return "Device";
 				case 33: return "Driver";
 				case 34: return "IoCompletion";

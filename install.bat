@@ -1,7 +1,7 @@
 @echo off
 
 @rem Optional define bindir and msbuild if not current set correctly. 
-call dev-setup.bat
+call ..\dev-setup.bat
 
 set prog=FileInfo
 set reldeb=Debug

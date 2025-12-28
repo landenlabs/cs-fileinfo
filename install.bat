@@ -12,11 +12,11 @@ cd %prog%
 lldu -sum obj bin 
 rmdir /s obj  2> nul
 rmdir /s bin  2> nul
-@rem %msbuild% %prog%.sln  -t:Clean
+@rem "%msbuild%" "%prog%.sln"  -t:Clean
 
 @echo.
 @echo ---- Build %reldeb% %prog% 
-%msbuild% %prog%.sln -m -p:Configuration="%reldeb%";Platform="x64" -verbosity:minimal  -detailedSummary:True
+"%msbuild%" "%prog%.sln" -m -p:Configuration="%reldeb%";Platform="x64" -verbosity:minimal  -detailedSummary:True
 
 @echo.
 @echo ---- Build done 
